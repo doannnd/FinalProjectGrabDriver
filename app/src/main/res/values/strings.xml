@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">FinalProjectGrabDriver</string>
+
+    <!-- text view -->
+    <string name="label_logo">Grab Driver</string>
+    <string name="label_instruction_enter_code">Enter the 6-digit code sent to</string>
+    <string name="label_phone_number">+84 %1$s</string>
+    <string name="label_question_receive_code">Didn\'t receive it ?</string>
+    <string name="label_request_a_new_code">Request a new code in %1$s</string>
+    <string name="label_request_new_code">
+    <![CDATA[
+        <html>
+            <body>
+              <pre><u><font color="#4CAF50">Request new code</font></u></pre>
+            </body>
+        </html>
+    ]]>
+    </string>
+    <string name="title_activity_driver">Driver Map</string>
+
+    <!--content description image -->
+    <string name="cdi_logo">logo</string>
+
+    <!-- title button -->
+    <string name="title_login">LOGIN</string>
+    <string name="title_vn">+84</string>
+
+    <!-- hint edit text -->
+    <string name="hint_name">Full name</string>
+    <string name="hint_phone">Phone</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_code">000000</string>
+
+    <!-- label menu -->
+    <string name="menu_profile">Profile</string>
+    <string name="menu_logout">Logout</string>
+
+</resources>
