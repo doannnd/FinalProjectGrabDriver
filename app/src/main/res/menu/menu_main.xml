@@ -5,7 +5,7 @@
         android:id="@+id/action_profile"
         android:title="@string/menu_profile"
         android:icon="@drawable/ic_baseline_list"
-        app:showAsAction="always"/>
+        app:showAsAction="ifRoom"/>
 
     <item
         android:id="@+id/action_logout"

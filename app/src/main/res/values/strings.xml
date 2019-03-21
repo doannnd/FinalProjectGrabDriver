@@ -35,4 +35,14 @@
     <string name="menu_profile">Profile</string>
     <string name="menu_logout">Logout</string>
 
+    <!-- error message -->
+    <string name="error_full_name">Enter full name</string>
+    <string name="error_email">Enter a valid email</string>
+    <string name="error_phone">Enter a valid phone</string>
+    <string name="error_verification_code">Enter a valid verification code</string>
+
+    <!-- content snack bar-->
+    <string name="snack_online">You are online</string>
+    <string name="snack_offline">You are offline</string>
+
 </resources>
