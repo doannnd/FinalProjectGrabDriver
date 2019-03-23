@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="General">
+        <ListPreference
+            android:defaultValue="4"
+            android:dialogTitle="@string/setting_dialog_title_map_type"
+            android:entries="@array/google_map_type_entries"
+            android:entryValues="@array/google_map_type_values"
+            android:key="@string/setting_dialog_key_map_type"
+            android:summary="@string/setting_dialog_summary_map_type"
+            android:title="@string/setting_dialog_title_map_type"/>
+    </PreferenceCategory>
+</PreferenceScreen>

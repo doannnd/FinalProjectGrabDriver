@@ -1,6 +1,5 @@
 package com.nguyendinhdoan.finalprojectgrabdriver.ui.phone;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.CountDownTimer;
@@ -16,7 +15,6 @@ import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import com.nguyendinhdoan.finalprojectgrabdriver.R;
@@ -135,7 +133,7 @@ public class PhoneActivity extends AppCompatActivity implements TextWatcher, Pho
                 String phone =  tvPhoneNumber.getText().toString().replace(" ", "");
                 String verificationCode = etVerificationCode.getText().toString();
 
-                CommonUtils.closeKeyBoard(this);
+                CommonUtils.hideKeyboard(this);
                 // handle event
                 presenter.verifyCodeAndLoginWithCredential(verificationCode, fullName, email, phone);
             }

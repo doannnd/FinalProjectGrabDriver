@@ -13,4 +13,9 @@
         <item name="android:textSize">14sp</item>
     </style>
 
+    <style name="SettingTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/colorGreen</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+    </style>
+
 </resources>

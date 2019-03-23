@@ -1,14 +1,15 @@
 package com.nguyendinhdoan.finalprojectgrabdriver.ui.driver;
 
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
+import android.content.SharedPreferences;
 import android.location.Location;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -17,21 +18,21 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.geofire.GeoFire;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.nguyendinhdoan.finalprojectgrabdriver.R;
 import com.nguyendinhdoan.finalprojectgrabdriver.ui.login.LoginActivity;
+import com.nguyendinhdoan.finalprojectgrabdriver.ui.setting.SettingsActivity;
+import com.nguyendinhdoan.finalprojectgrabdriver.util.CommonUtils;
 import com.wang.avi.AVLoadingIndicatorView;
 
 import butterknife.BindView;
@@ -111,6 +112,13 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
                 launchLogin();
                 break;
             }
+            case R.id.action_settings: {
+                Intent intentSettingActivity = new Intent(this, SettingsActivity.class);
+                intentSettingActivity.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intentSettingActivity);
+                finish();
+                break;
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -125,7 +133,8 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
-
+        //
+        settingDisplayMapType();
         // get location permission of the device
         presenter.getLocationPermission(this);
         // update ui
@@ -197,6 +206,8 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
             mMarker = mGoogleMap.addMarker(new MarkerOptions().position(coordinateCurrentLocation)
                     .title("You"));
         }
+        //
+        changeStateWorkingOfUser();
     }
 
     @Override
@@ -219,12 +230,61 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isOnline) {
+        CommonUtils.saveStateWorkingOfDriver(this, isOnline);
+
         if (isOnline) {
-            Snackbar.make(layoutDriver, getString(R.string.snack_online), Snackbar.LENGTH_LONG).show();
+            showSnackBar(getString(R.string.snack_online));
             showCurrentLocation();
         } else {
-            Snackbar.make(layoutDriver, getString(R.string.snack_offline), Snackbar.LENGTH_LONG).show();
+            showSnackBar(getString(R.string.snack_offline));
             hideCurrentLocation();
         }
     }
+
+    private void changeStateWorkingOfUser() {
+        SharedPreferences sharedPreferences = getSharedPreferences(CommonUtils.PREF_KEY_SATE_OF_DRIVER, Context.MODE_PRIVATE);
+        boolean isOnline = sharedPreferences.getBoolean(CommonUtils.KEY_IS_ONLINE, false);
+        if (isOnline) {
+            switchStateDriver.setChecked(true);
+            showSnackBar(getString(R.string.snack_online));
+            showCurrentLocation();
+        } else {
+            switchStateDriver.setChecked(false);
+            showSnackBar(getString(R.string.snack_offline));
+            hideCurrentLocation();
+        }
+    }
+
+    private void settingDisplayMapType() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String typeMap = sharedPreferences.getString(getString(R.string.setting_dialog_key_map_type), "");
+        switch (typeMap) {
+            case "0":
+                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                break;
+            case "1":
+                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                break;
+            case "2":
+                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+                break;
+            case "3":
+                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                break;
+            default:
+                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                break;
+        }
+    }
+
+    private void showSnackBar(String message) {
+        Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG);
+        View view = snackbar.getView();
+        // set background color for snack bar
+        view.setBackgroundColor(ContextCompat.getColor(this, R.color.colorGreen));
+        TextView textView = view.findViewById(android.support.design.R.id.snackbar_text);
+        textView.setTextColor(ContextCompat.getColor(this, R.color.colorWhite));
+        snackbar.show();
+    }
+
 }

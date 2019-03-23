@@ -39,7 +39,13 @@
 
         <activity
             android:name=".ui.driver.DriverActivity"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_driver"/>
+
+        <activity
+            android:name=".ui.setting.SettingsActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/SettingTheme"/>
 
         <meta-data
             android:name="preloaded_fonts"
