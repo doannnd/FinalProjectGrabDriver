@@ -204,10 +204,6 @@ public class PhoneActivity extends AppCompatActivity implements TextWatcher, Pho
 
     private void errorMessageVerificationCode(String message) {
         Snackbar snackbar = Snackbar.make(layoutPhone, message, Snackbar.LENGTH_LONG);
-        View snackBarView = snackbar.getView();
-        snackBarView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent));
-        TextView content = snackBarView.findViewById(android.support.design.R.id.snackbar_text);
-        content.setTextColor(Color.BLACK);
         snackbar.show();
     }
 

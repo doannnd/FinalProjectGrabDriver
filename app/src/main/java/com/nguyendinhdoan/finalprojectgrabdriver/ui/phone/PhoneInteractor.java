@@ -15,7 +15,7 @@ import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.nguyendinhdoan.finalprojectgrabdriver.model.Driver;
+import com.nguyendinhdoan.finalprojectgrabdriver.data.model.Driver;
 
 import java.util.concurrent.TimeUnit;
 

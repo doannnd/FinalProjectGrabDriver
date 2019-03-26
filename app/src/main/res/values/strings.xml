@@ -30,6 +30,7 @@
     <string name="hint_phone">Phone</string>
     <string name="hint_email">Email</string>
     <string name="hint_code">000000</string>
+    <string name="hint_search">Search</string>
 
     <!-- label menu -->
     <string name="menu_profile">Profile</string>

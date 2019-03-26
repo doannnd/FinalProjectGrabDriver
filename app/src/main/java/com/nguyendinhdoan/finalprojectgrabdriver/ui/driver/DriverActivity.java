@@ -4,30 +4,33 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
-import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.nguyendinhdoan.finalprojectgrabdriver.R;
 import com.nguyendinhdoan.finalprojectgrabdriver.ui.login.LoginActivity;
@@ -38,7 +41,9 @@ import com.wang.avi.AVLoadingIndicatorView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class DriverActivity extends AppCompatActivity implements OnMapReadyCallback, DriverContract.DriverToView, CompoundButton.OnCheckedChangeListener {
+public class DriverActivity extends AppCompatActivity implements OnMapReadyCallback,
+        DriverContract.DriverToView, CompoundButton.OnCheckedChangeListener,
+        PlaceSelectionListener, View.OnTouchListener {
 
     public static final int DEFAULT_ZOOM = 14;
     public static final double CIRCLE_RADIUS = 100.0;
@@ -52,9 +57,10 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
     AVLoadingIndicatorView avLoadingIndicatorView;
     @BindView(R.id.activity_driver_switch_state_driver)
     Switch switchStateDriver;
+    @BindView(R.id.activity_driver_et_search)
+    EditText etSearch;
 
     private GoogleMap mGoogleMap;
-    private Marker mMarker;
     private DriverContract.DriverToPresenter presenter;
 
     @Override
@@ -76,12 +82,14 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
 
     private void addEvents() {
         switchStateDriver.setOnCheckedChangeListener(this);
+        etSearch.setOnTouchListener(this);
     }
 
     private void setupGoogleMap() {
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.activity_driver_map);
+
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
         }
@@ -159,9 +167,11 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
             if (DriverInteractor.mLocationPermissionGranted) {
                 mGoogleMap.setMyLocationEnabled(true);
                 mGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
+                mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
             } else {
                 mGoogleMap.setMyLocationEnabled(false);
                 mGoogleMap.getUiSettings().setMyLocationButtonEnabled(false);
+                mGoogleMap.getUiSettings().setZoomControlsEnabled(false);
                 presenter.getLocationPermission(this);
             }
         } catch (SecurityException e) {
@@ -174,7 +184,7 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
             if (DriverInteractor.mLocationPermissionGranted) {
                 mGoogleMap.setMyLocationEnabled(true);
                 mGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
-                mMarker.setVisible(true);
+                mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
             }
         } catch (SecurityException e) {
             Log.e("Exception: %s", e.getMessage());
@@ -185,7 +195,7 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
         try {
             mGoogleMap.setMyLocationEnabled(false);
             mGoogleMap.getUiSettings().setMyLocationButtonEnabled(false);
-            mMarker.setVisible(false);
+            mGoogleMap.getUiSettings().setZoomControlsEnabled(false);
         } catch (SecurityException e) {
             Log.e("Exception: %s", e.getMessage());
         }
@@ -197,14 +207,14 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
         if (mLastKnownLocation != null) {
             LatLng coordinateCurrentLocation = new LatLng(mLastKnownLocation.getLatitude(),
                     mLastKnownLocation.getLongitude());
-            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(coordinateCurrentLocation, DEFAULT_ZOOM));
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinateCurrentLocation, DEFAULT_ZOOM));
             // add circle for current location
             /*mGoogleMap.addCircle(new CircleOptions().center(coordinateCurrentLocation)
                     .radius(CIRCLE_RADIUS).strokeWidth(CIRCLE_STROKE_WIDTH)
                     .strokeColor(Color.BLUE).fillColor(Color.argb(70,9, 131, 247)));*/
             // add marker and title
-            mMarker = mGoogleMap.addMarker(new MarkerOptions().position(coordinateCurrentLocation)
-                    .title("You"));
+           /* mMarker = mGoogleMap.addMarker(new MarkerOptions().position(coordinateCurrentLocation)
+                    .title("You"));*/
         }
         //
         changeStateWorkingOfUser();
@@ -286,5 +296,32 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
         textView.setTextColor(ContextCompat.getColor(this, R.color.colorWhite));
         snackbar.show();
     }
+
+    @Override
+    public void onPlaceSelected(@NonNull Place place) {
+        Toast.makeText(this, "Place: " + place.getName() + ", " + place.getId(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onError(@NonNull Status status) {
+        Toast.makeText(this, "An error occurred: " + status, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN: {
+                Toast.makeText(this, "on touch", Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case MotionEvent.ACTION_UP: {
+                v.performClick();
+                break;
+            }
+            default:break;
+        }
+        return true;
+    }
+
 
 }

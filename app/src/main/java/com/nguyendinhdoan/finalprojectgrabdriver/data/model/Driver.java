@@ -1,4 +1,4 @@
-package com.nguyendinhdoan.finalprojectgrabdriver.model;
+package com.nguyendinhdoan.finalprojectgrabdriver.data.model;
 
 public class Driver {
 
