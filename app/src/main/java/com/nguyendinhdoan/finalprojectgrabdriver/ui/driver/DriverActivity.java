@@ -7,6 +7,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -29,6 +30,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -78,6 +80,7 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
     private void setupUi() {
         setupToolbar();
         setupGoogleMap();
+        setupPlaces();
     }
 
     private void addEvents() {
@@ -93,6 +96,10 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
         }
+    }
+
+    private void setupPlaces() {
+        Places.initialize(this, getString(R.string.google_api_key));
     }
 
     private void setupToolbar() {
@@ -311,7 +318,7 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
     public boolean onTouch(View v, MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: {
-                Toast.makeText(this, "on touch", Toast.LENGTH_SHORT).show();
+                presenter.searchLocationWithAutoComplete(this);
                 break;
             }
             case MotionEvent.ACTION_UP: {
@@ -324,4 +331,9 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
     }
 
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        presenter.onActivityResult(requestCode, resultCode, data);
+    }
 }

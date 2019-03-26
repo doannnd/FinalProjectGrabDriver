@@ -1,6 +1,8 @@
 package com.nguyendinhdoan.finalprojectgrabdriver.ui.driver;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -29,6 +31,16 @@ public class DriverPresenter implements DriverContract.DriverToPresenter, Driver
     @Override
     public void onRequestPermissionResult(int requestCode, int[] grantResults) {
         model.onRequestPermissionResult(requestCode, grantResults);
+    }
+
+    @Override
+    public void searchLocationWithAutoComplete(Activity activity) {
+        model.searchLocationWithAutoComplete(activity);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        model.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.nguyendinhdoan.finalprojectgrabdriver.ui.driver;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.annotation.NonNull;
@@ -12,25 +13,36 @@ import android.widget.Toast;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.model.RectangularBounds;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.AutocompleteActivity;
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 public class DriverInteractor implements DriverContract.DriverToInteractor {
 
     private static final String TAG = "DriverInteractor";
 
+    public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    public static final int AUTOCOMPLETE_REQUEST_CODE = 2;
+
     private DriverContract.OnDriverListener listener;
     public static boolean mLocationPermissionGranted;
-    private final LatLng mDefaultLocation = new LatLng(21.0055546,105.8434628);
-    public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    private final LatLng mDefaultLocation = new LatLng(21.0055546, 105.8434628);
+
 
     public DriverInteractor(DriverContract.OnDriverListener listener) {
         this.listener = listener;
@@ -94,6 +106,34 @@ public class DriverInteractor implements DriverContract.DriverToInteractor {
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     mLocationPermissionGranted = true;
                 }
+            }
+        }
+    }
+
+    @Override
+    public void searchLocationWithAutoComplete(Activity activity) {
+        List<Place.Field> fieldList = Arrays.asList(Place.Field.ID, Place.Field.NAME);
+        // start autocomplete with intent
+        Intent intentAutoComplete = new Autocomplete.IntentBuilder(
+                AutocompleteActivityMode.OVERLAY, fieldList
+        ).setCountry("VN").setLocationRestriction(RectangularBounds.newInstance(new LatLng(21.008355, 105.746496),
+                new LatLng(21.0468514, 105.9216884)))
+                .build(activity);
+        activity.startActivityForResult(intentAutoComplete, AUTOCOMPLETE_REQUEST_CODE);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == AUTOCOMPLETE_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                Place place = Autocomplete.getPlaceFromIntent(data);
+                Log.i(TAG, "Place: " + place.getName());
+            } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
+                Status status = Autocomplete.getStatusFromIntent(data);
+                Log.i(TAG, status.getStatusMessage());
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                // the user canceled the operation
+                Log.i(TAG, "Canceled");
             }
         }
     }
