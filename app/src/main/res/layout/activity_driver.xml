@@ -67,7 +67,7 @@
             android:background="@null"
             android:hint="@string/hint_search"
             android:textColorHint="@color/colorGrayDark"
-            android:textSize="18sp"
+            android:textSize="14sp"
             android:inputType="text"
             android:imeOptions="actionSearch"
             android:drawableStart="@drawable/ic_go_location"

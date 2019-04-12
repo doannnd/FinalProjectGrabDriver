@@ -7,15 +7,21 @@ import android.location.Location;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.List;
+
 public interface DriverContract {
     interface DriverToView {
         void getDeviceLocationSuccess(Location lastKnownLocation);
 
         void getDeviceLocationFailed(LatLng defaultLocation, String message);
 
+        void showDirectionRoute(List<LatLng> polyLineList);
+
         void showLoading();
 
         void hideLoading();
+
+        void showPickupLocationName(String placeName);
     }
 
     interface DriverToPresenter {
@@ -27,7 +33,7 @@ public interface DriverContract {
 
         void searchLocationWithAutoComplete(Activity activity);
 
-        void onActivityResult(int requestCode, int resultCode, Intent data);
+        void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data);
     }
 
     interface DriverToInteractor {
@@ -39,7 +45,7 @@ public interface DriverContract {
 
         void searchLocationWithAutoComplete(Activity activity);
 
-        void onActivityResult(int requestCode, int resultCode, Intent data);
+        void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data);
     }
 
     interface OnDriverListener {
@@ -50,6 +56,10 @@ public interface DriverContract {
         void showLoading();
 
         void hideLoading();
+
+        void showDirectionRoute(List<LatLng> polyLineList);
+
+        void showPickupLocationName(String placeName);
     }
 
 }

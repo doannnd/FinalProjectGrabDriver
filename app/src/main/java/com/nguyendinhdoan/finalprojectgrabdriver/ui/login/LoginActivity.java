@@ -161,9 +161,12 @@ public class LoginActivity extends AppCompatActivity implements LoginContract.Lo
     @Override
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
         if (actionId == EditorInfo.IME_ACTION_SEND) {
+            CommonUtils.hideKeyboard(this);
+
             String email = etEmail.getText().toString();
             String password = etPhone.getText().toString();
             String fullName = etFullName.getText().toString();
+
             presenter.validateLoginFields(this, email, password, fullName);
             return true;
         }

@@ -23,12 +23,14 @@ import com.nguyendinhdoan.finalprojectgrabdriver.ui.login.LoginActivity;
 import com.nguyendinhdoan.finalprojectgrabdriver.util.CommonUtils;
 import com.wang.avi.AVLoadingIndicatorView;
 
+import java.util.Locale;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class PhoneActivity extends AppCompatActivity implements TextWatcher, PhoneContract.PhoneToView{
 
-    public static final long VERIFY_PHONE_NUMBER_TIME_OUT = 30000;
+    public static final long VERIFY_PHONE_NUMBER_TIME_OUT = 30000L;
     public static final long COUNT_DOWN_INTERVAL = 1000;
 
     @BindView(R.id.activity_phone_layout_phone)
@@ -142,10 +144,11 @@ public class PhoneActivity extends AppCompatActivity implements TextWatcher, Pho
 
     private void handleTimeout() {
         new CountDownTimer(VERIFY_PHONE_NUMBER_TIME_OUT, COUNT_DOWN_INTERVAL) {
-            int timeout = 30;
             @Override
             public void onTick(long millisUntilFinished) {
-                tvRequestNewCode.setText(getString(R.string.label_request_a_new_code, String.valueOf(--timeout)));
+                long timeLeft = millisUntilFinished / 1000;
+                tvRequestNewCode.setText(getString(R.string.label_request_a_new_code,
+                        String.format(Locale.getDefault(), "%d", timeLeft)));
             }
 
             @Override

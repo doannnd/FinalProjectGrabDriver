@@ -7,6 +7,8 @@ import android.location.Location;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.List;
+
 public class DriverPresenter implements DriverContract.DriverToPresenter, DriverContract.OnDriverListener {
 
     private DriverContract.DriverToView view;
@@ -15,7 +17,7 @@ public class DriverPresenter implements DriverContract.DriverToPresenter, Driver
     public DriverPresenter(DriverContract.DriverToView view) {
         this.view = view;
         model = new DriverInteractor(this);
-    }
+    }   
 
     @Override
     public void getDeviceLocation(Context context) {
@@ -39,8 +41,8 @@ public class DriverPresenter implements DriverContract.DriverToPresenter, Driver
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        model.onActivityResult(requestCode, resultCode, data);
+    public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+        model.onActivityResult(activity, requestCode, resultCode, data);
     }
 
     @Override
@@ -61,6 +63,16 @@ public class DriverPresenter implements DriverContract.DriverToPresenter, Driver
     @Override
     public void hideLoading() {
         view.hideLoading();
+    }
+
+    @Override
+    public void showDirectionRoute(List<LatLng> polyLineList) {
+        view.showDirectionRoute(polyLineList);
+    }
+
+    @Override
+    public void showPickupLocationName(String placeName) {
+        view.showPickupLocationName(placeName);
     }
 
 }

@@ -1,8 +1,10 @@
 package com.nguyendinhdoan.finalprojectgrabdriver.ui.driver;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -18,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -25,11 +28,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolygonOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
@@ -40,6 +50,8 @@ import com.nguyendinhdoan.finalprojectgrabdriver.ui.setting.SettingsActivity;
 import com.nguyendinhdoan.finalprojectgrabdriver.util.CommonUtils;
 import com.wang.avi.AVLoadingIndicatorView;
 
+import java.util.List;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -47,7 +59,9 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
         DriverContract.DriverToView, CompoundButton.OnCheckedChangeListener,
         PlaceSelectionListener, View.OnTouchListener {
 
-    public static final int DEFAULT_ZOOM = 14;
+    public static final String TAG = "DRIVER_ACTIVITY";
+    public static final int DEFAULT_ZOOM_GOOGLE_MAP = 14;
+    public static final float POLYLINE_WIDTH = 4F;
     public static final double CIRCLE_RADIUS = 100.0;
     public static final float CIRCLE_STROKE_WIDTH = 1f;
 
@@ -214,7 +228,7 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
         if (mLastKnownLocation != null) {
             LatLng coordinateCurrentLocation = new LatLng(mLastKnownLocation.getLatitude(),
                     mLastKnownLocation.getLongitude());
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinateCurrentLocation, DEFAULT_ZOOM));
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinateCurrentLocation, DEFAULT_ZOOM_GOOGLE_MAP));
             // add circle for current location
             /*mGoogleMap.addCircle(new CircleOptions().center(coordinateCurrentLocation)
                     .radius(CIRCLE_RADIUS).strokeWidth(CIRCLE_STROKE_WIDTH)
@@ -230,9 +244,68 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
     @Override
     public void getDeviceLocationFailed(LatLng mDefaultLocation, String message) {
         if (mDefaultLocation != null && message != null) {
-            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM_GOOGLE_MAP));
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public void showDirectionRoute(List<LatLng> polyLineList) {
+        PolylineOptions polylineOptions = new PolylineOptions();
+        PolylineOptions overLayPolyLineOptions = new PolylineOptions();
+
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
+        for (LatLng latLng : polyLineList) {
+            builder.include(latLng);
+            polylineOptions.add(latLng);
+            overLayPolyLineOptions.add(latLng);
+        }
+
+        polylineOptions.color(ContextCompat.getColor(this, R.color.colorBlue));
+        polylineOptions.width(POLYLINE_WIDTH);
+        final Polyline bluePolyline = mGoogleMap.addPolyline(polylineOptions);
+
+        overLayPolyLineOptions.color(ContextCompat.getColor(this, R.color.colorBlueLight));
+        overLayPolyLineOptions.width(POLYLINE_WIDTH);
+        final Polyline blueLightPolyline = mGoogleMap.addPolyline(overLayPolyLineOptions);
+
+        LatLngBounds bounds = builder.build();
+        int padding = 150; // offset from edges of the map in pixels
+
+        // add marker end point direction
+        LatLng endPointCoordinator = polyLineList.get(polyLineList.size() - 1);
+        Marker markerEndpoint = mGoogleMap.addMarker(new MarkerOptions()
+                .position(endPointCoordinator)
+                .title("pickup"));
+        markerEndpoint.showInfoWindow();
+
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+        mGoogleMap.moveCamera(cameraUpdate);
+
+        ValueAnimator valueAnimator = ValueAnimator.ofInt(0, 100);
+        valueAnimator.setDuration(1000);
+        valueAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        valueAnimator.setRepeatMode(ValueAnimator.RESTART);
+        valueAnimator.setInterpolator(new LinearInterpolator());
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                List<LatLng> points = bluePolyline.getPoints();
+                int percentValue = (int) animation.getAnimatedValue();
+                int size = points.size();
+                int newPoints = (int) (size * (percentValue / 100.0f));
+                List<LatLng> p = points.subList(0, newPoints);
+                blueLightPolyline.setPoints(p);
+            }
+        });
+        valueAnimator.start();
+
+    }
+
+    @Override
+    public void showPickupLocationName(String placeName) {
+        etSearch.setText(placeName);
     }
 
     @Override
@@ -325,7 +398,8 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
                 v.performClick();
                 break;
             }
-            default:break;
+            default:
+                break;
         }
         return true;
     }
@@ -334,6 +408,6 @@ public class DriverActivity extends AppCompatActivity implements OnMapReadyCallb
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        presenter.onActivityResult(requestCode, resultCode, data);
+        presenter.onActivityResult(this, requestCode, resultCode, data);
     }
 }

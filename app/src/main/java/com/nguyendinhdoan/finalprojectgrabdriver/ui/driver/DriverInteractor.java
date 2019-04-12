@@ -15,7 +15,10 @@ import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.model.Place;
@@ -27,10 +30,22 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.JsonObject;
+import com.google.maps.android.PolyUtil;
+import com.nguyendinhdoan.finalprojectgrabdriver.R;
+import com.nguyendinhdoan.finalprojectgrabdriver.common.Common;
+import com.nguyendinhdoan.finalprojectgrabdriver.data.remote.IGoogleAPI;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DriverInteractor implements DriverContract.DriverToInteractor {
 
@@ -38,10 +53,13 @@ public class DriverInteractor implements DriverContract.DriverToInteractor {
 
     public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     public static final int AUTOCOMPLETE_REQUEST_CODE = 2;
+    public static final String URL_DIRECTION = "https://maps.googleapis.com/maps/api/directions/json?";
 
     private DriverContract.OnDriverListener listener;
     public static boolean mLocationPermissionGranted;
     private final LatLng mDefaultLocation = new LatLng(21.0055546, 105.8434628);
+    private Location lastKnownLocation;
+    private List<LatLng> polyLineList;
 
 
     public DriverInteractor(DriverContract.OnDriverListener listener) {
@@ -61,7 +79,7 @@ public class DriverInteractor implements DriverContract.DriverToInteractor {
                         public void onComplete(@NonNull Task task) {
                             if (task.isSuccessful()) {
                                 // current location of you
-                                Location lastKnownLocation = (Location) task.getResult();
+                                lastKnownLocation = (Location) task.getResult();
                                 if (lastKnownLocation != null) {
                                     saveCurrentLocationInDatabase(lastKnownLocation);
                                 }
@@ -112,7 +130,7 @@ public class DriverInteractor implements DriverContract.DriverToInteractor {
 
     @Override
     public void searchLocationWithAutoComplete(Activity activity) {
-        List<Place.Field> fieldList = Arrays.asList(Place.Field.ID, Place.Field.NAME);
+        List<Place.Field> fieldList = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG);
         // start autocomplete with intent
         Intent intentAutoComplete = new Autocomplete.IntentBuilder(
                 AutocompleteActivityMode.OVERLAY, fieldList
@@ -123,11 +141,16 @@ public class DriverInteractor implements DriverContract.DriverToInteractor {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
         if (requestCode == AUTOCOMPLETE_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 Place place = Autocomplete.getPlaceFromIntent(data);
                 Log.i(TAG, "Place: " + place.getName());
+                Log.d(TAG, "Latng: " + place.getLatLng());
+
+                listener.showPickupLocationName(place.getName());
+                getDirectionRoute(activity, lastKnownLocation, Objects.requireNonNull(place.getLatLng()));
+
             } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
                 Status status = Autocomplete.getStatusFromIntent(data);
                 Log.i(TAG, status.getStatusMessage());
@@ -158,4 +181,45 @@ public class DriverInteractor implements DriverContract.DriverToInteractor {
             }
         });
     }
+
+    private void getDirectionRoute(Activity activity, Location lastLocation, LatLng goLocation) {
+        LatLng currentLocation = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+
+        // url direction: current location --> go location
+        String url = URL_DIRECTION + "origin=" + currentLocation.latitude + "," + currentLocation.longitude
+                + "&" + "destination=" + goLocation.latitude + "," + goLocation.longitude + "&key="
+                + activity.getString(R.string.google_api_key);
+        Log.d(TAG, "URL: " + url);
+
+        IGoogleAPI service = Common.getGoogleAPI();
+        service.getPath(url).enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                try {
+                    JSONObject root = new JSONObject(response.body());
+                    JSONArray routes = root.getJSONArray("routes");
+                    for (int i = 0; i < routes.length(); i++) {
+                        JSONObject route = routes.getJSONObject(i);
+                        JSONObject poly = route.getJSONObject("overview_polyline");
+                        String points = poly.getString("points");
+                        Log.d(TAG, "points: " + points);
+
+                        polyLineList = PolyUtil.decode(points);
+                    }
+                    Log.d(TAG, "poly line list size: " + polyLineList.size());
+                    // draw polyline on google map
+                    listener.showDirectionRoute(polyLineList);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                Log.e(TAG, t.getMessage());
+            }
+        });
+    }
+
 }
